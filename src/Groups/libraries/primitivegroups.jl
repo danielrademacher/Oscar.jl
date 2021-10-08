@@ -4,6 +4,8 @@ export
     primitive_group
 
 
+# TODO: use PrimitiveGroupsAvailable
+
 ###################################################################
 # Primitive groups, block system
 ###################################################################
@@ -13,13 +15,14 @@ export
 Return the number of primitive permutation groups of degree `n`,
 up to permutation isomorphism.
 """
-number_primitive_groups(n::Int) = GAP.Globals.NrPrimitiveGroups(n)
+number_primitive_groups(n::Int) = GAP.Globals.NrPrimitiveGroups(n)::GapInt
 
 """
     primitive_group(deg::Int, i::Int)
 
-Return the `i`-th group in the catalogue of primitive groups of degree `n`
-in GAP's Primitive Groups Library. The output is a group of type `PermGroup`.
+Return the `i`-th group in the catalogue of primitive groups over the set
+{`1`,...,`deg`} in the GAP Small Groups Library. The output is a group of type
+``PermGroup``.
 """
 function primitive_group(deg::Int, n::Int)
    N = number_primitive_groups(deg)
@@ -48,28 +51,8 @@ returns the list of all abelian primitive groups acting on a set of order 4.
 The type of the groups is `PermGroup`.
 """
 function all_primitive_groups(L...)
-   valid, temp = CheckValidType(L; isapg=true)
-   @assert valid "Wrong type inserted"
-   isargument = false                     # says if the inserted value is the argument of the previous value
-
-   L1 = Vector(undef, length(L)+temp)
-   pos = 1
-   for i in 1:length(L)
-      if typeof(L[i]) <: Function
-         if isargument
-            L1[pos] = true
-            pos += 1
-         end
-         L1[pos] = find_index_function(L[i], true)[2]
-         isargument = true
-      else
-         L1[pos] = GAP.julia_to_gap(L[i])
-         isargument = false
-      end
-   pos+=1
-   end
-   if isargument L1[length(L1)]=true end
-
-   K = GAP.Globals.AllPrimitiveGroups(L1...)
-   return [PermGroup(x) for x in K]          # GAP.julia_to_gap(K) does not work
+   !isempty(L) || throw(ArgumentError("must specify at least one filter"))
+   gapargs = translate_group_library_args(L; permgroups=true)
+   K = GAP.Globals.AllPrimitiveGroups(gapargs...)
+   return [PermGroup(x) for x in K]
 end

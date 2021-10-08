@@ -1,9 +1,37 @@
+#=
+Alternative:
+
+module SmallGroups
+
+all_groups / all
+one
+all_group_ids
+
+groups_available(order) / availble
+ids_available(order)
+
+group(n, i)
+identify(group)
+
+end
+
+
+- add deprecations for the old names
+- hook up the docstrings into the manual
+- improve docstrings, e.g. by borrowing from their GAP counterparts
+- add examples
+
+=#
+
 export
     all_small_groups,
+    all_small_group_ids, # IdsOfAllSmallGroups
     number_small_groups,
+    small_groups_available,   # NumberSmallGroupsAvailable
+    small_group_ids_available,  # IdGroupsAvailable
     small_group,
     small_group_identification
-    
+
 
 
 ###################################################################
@@ -13,9 +41,8 @@ export
 """
     small_group(n::Int, i::Int)
 
-Return the `i`-th group of order `n` in the catalogue of GAP's
-Small Groups Library.
-The group is given of type `PcGroup` if the group is solvable,
+Return the `i`-th group of order `n` in the catalogue of GAP's Small Groups
+Library. The group is given of type `PcGroup` if the group is solvable,
 `PermGroup` otherwise.
 """
 function small_group(n::Int, m::Int)
@@ -41,11 +68,13 @@ end
 
 Return the number of groups of order `n`, up to isomorphism.
 """
-number_small_groups(n::Int) = GAP.Globals.NumberSmallGroups(n)
+number_small_groups(n::Int) = GAP.Globals.NumberSmallGroups(n)::GapInt
 
 
 """
-    all_small_groups(n::Int, L...)
+    all_small_groups(L...)
+
+TODO: adjust this text
 
 Return the list of all groups (up to isomorphism) of order `n` and satisfying
 the conditions in `L`. Here, `L` is a vector whose arguments are organized as
@@ -62,21 +91,14 @@ returns the list of all abelian non-cyclic groups of order 12.
 
 The type of the groups is `PcGroup` if the group is solvable, `PermGroup` otherwise.
 """
-function all_small_groups(n::Int, L...)
-   @assert CheckValidType(L)[1] "Wrong type inserted"
-   
-   L1 = Vector(undef, length(L)+1)
-   L1[1] = n
-   for i in 1:length(L)
-      if typeof(L[i]) <: Function
-         L1[i+1] = find_index_function(L[i],false)[2]
-      else
-         L1[i+1] = GAP.julia_to_gap(L[i])
-      end
+function all_small_groups(L...)
+   !isempty(L) || throw(ArgumentError("must specify at least one filter"))
+   if L[1] isa Int
+      L = (order => L[1], L[2:end]...)
    end
-
-   K = GAP.Globals.AllSmallGroups(L1...)
-   return [_get_type(x)(x) for x in K]          # GAP.julia_to_gap(K) does not work
+   gapargs = translate_group_library_args(L)
+   K = GAP.Globals.AllSmallGroups(gapargs...)
+   return [_get_type(x)(x) for x in K]
 end
 #T what does this comment mean?
 

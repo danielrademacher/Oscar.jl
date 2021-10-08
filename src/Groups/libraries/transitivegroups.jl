@@ -1,17 +1,31 @@
 export
     all_transitive_groups,
     number_transitive_groups,
+    transitive_groups_available,
     transitive_group,
     transitive_identification
-    
+
 
 """
-    number_transitive_groups(n::Int)
+    transitive_groups_available(deg::Int)
 
-Return the number of transitive groups acting on a set of size `n`,
-up to permutation isomorphism.
+Return whether the transitive groups groups of degree `deg` are available for use.
+This function should be used to test for the scope of the library available.
 """
-number_transitive_groups(n::Int) = GAP.Globals.NrTransitiveGroups(n)
+transitive_groups_available(deg::Int) = GAP.Globals.TransitiveGroupsAvailable(deg)::Bool
+
+
+"""
+    number_transitive_groups(deg::Int)
+
+Return the number of transitive groups of degree `deg` stored in the library of transitive groups. The
+function returns `missing` if `deg` is beyond the range of the library.
+"""
+function number_transitive_groups(deg::Int)
+   res = GAP.Globals.NrTransitiveGroups(deg)
+   res isa Int && return res
+   return missing
+end
 
 """
     transitive_group(deg::Int, i::Int)
@@ -21,6 +35,7 @@ Return the `i`-th group in the catalogue of transitive groups over the set
 The output is a group of type `PermGroup`.
 """
 function transitive_group(deg::Int, n::Int)
+   transitive_groups_available(deg) || error("Transitive groups of degree $(deg) are not available")
    N = number_transitive_groups(deg)
    @assert n <= N "There are only $N transitive groups of degree $deg, up to permutation isomorphism."
 
@@ -73,12 +88,13 @@ julia> transitive_identification(S)
 ```
 """
 function transitive_identification(G::PermGroup)
+  deg = degree(G)
   moved = moved_points(G)
-  length(moved) < 32 || return -1
-  istransitive(G, moved) || return 0
-  return GAP.Globals.TransitiveIdentification(G.X)
+# TODO: fix docu
+  istransitive(G, moved) || error("group is not transitive")
+  transitive_groups_available(deg) || error("Transitive groups of degree $(deg) are not available")
+  return GAP.Globals.TransitiveIdentification(G.X)::Int
 end
-
 
 """
     all_transitive_groups(L...)
@@ -89,6 +105,9 @@ Here, `L` is a vector whose arguments are organized as `L` = [ `func1`,
 `arg1`, `func2`, `arg2`, ... ], and the function returns all the groups `G`
 satisfying the conditions `func1`(`G`) = `arg1`, `func2`(`G`) = `arg2`, etc.
 An argument can be omitted if it corresponds to the boolean value `true`.
+
+TODO: specify which predicates are supported
+# TODO: allow specifying !isabelian?
 
 # Examples
 ```jldoctest
@@ -102,29 +121,8 @@ returns the list of all abelian transitive groups acting on a set of order 4.
 The type of the groups is `PermGroup`.
 """
 function all_transitive_groups(L...)
-   valid, temp = CheckValidType(L; isapg=true)
-   @assert valid "Wrong type inserted"
-   isargument = false                     # says if the inserted value is the argument of the previous value
-   
-   L1 = Vector(undef, length(L)+temp)
-   pos = 1
-   for i in 1:length(L)
-      if typeof(L[i]) <: Function
-         if isargument
-            L1[pos] = true
-            pos += 1
-         end
-         L1[pos] = find_index_function(L[i], true)[2]
-         isargument = true
-      else
-         L1[pos] = GAP.julia_to_gap(L[i])
-         isargument = false
-      end
-   pos+=1
-   end
-   if isargument L1[length(L1)]=true end
-
-   K = GAP.Globals.AllTransitiveGroups(L1...)
-   return [PermGroup(x) for x in K]          # GAP.julia_to_gap(K) does not work
+   gapargs = translate_group_library_args(L; permgroups=true)
+   K = GAP.Globals.AllTransitiveGroups(gapargs...)
+   return [PermGroup(x) for x in K]
 end
 

@@ -9,71 +9,93 @@ include("transitivegroups.jl")
 
 #############################################################################
 
+const _group_props = Dict{Any,GapObj}()
+const _group_props_neg = Dict{Any,GapObj}()
+
+function __init_group_libraries()
+    props = [
+        isabelian => GAP.Globals.IsAbelian,
+        isalmostsimple => GAP.Globals.IsAlmostSimpleGroup,
+        iscyclic => GAP.Globals.IsCyclic,
+        isnilpotent => GAP.Globals.IsNilpotentGroup,
+        isperfect => GAP.Globals.IsPerfectGroup,
+        issimple => GAP.Globals.IsSimpleGroup,
+        issolvable => GAP.Globals.IsSolvableGroup,
+        issupersolvable => GAP.Globals.IsSupersolvableGroup,
+    ]
+
+    empty!(_group_props)
+    push!(_group_props, props...)
+
+    empty!(_group_props_neg)
+    for (k, v) in props
+        _group_props_neg[!k] = v
+    end
+end
+
 # return the output of the function f and the corresponding GAP function
-function find_index_function(f, isapg)
-   if f == isabelian return Bool, GAP.Globals.IsAbelian
-   elseif f == isalmostsimple return Bool, GAP.Globals.IsAlmostSimpleGroup
-   elseif f == iscyclic return Bool, GAP.Globals.IsCyclic
-   elseif f == isnilpotent return Bool, GAP.Globals.IsNilpotentGroup
-   elseif f == isperfect return Bool, GAP.Globals.IsPerfectGroup
-   elseif f == issimple return Bool, GAP.Globals.IsSimpleGroup
-   elseif f == issolvable return Bool, GAP.Globals.IsSolvableGroup
-   elseif f == issupersolvable return Bool, GAP.Globals.IsSupersolvableGroup
-   elseif f == istransitive return Bool, GAP.Globals.IsTransitive
-   elseif f == number_moved_points || f == degree
-      if isapg
-         return Union{Int, AbstractVector{Int}}, GAP.Globals.NrMovedPoints
-      else
-         throw(ArgumentError("Function not supported"))
+# TODO: use @nospecialize???
+function find_index_function(f, permgroups::Bool)
+
+   haskey(_group_props, f) && return Bool, _group_props[f], true
+   haskey(_group_props_neg, f) && return Bool, _group_props_neg[f], false
+
+   f == order && return Union{Int, AbstractVector{Int}}, GAP.Globals.Size, nothing
+
+   if permgroups
+      if f == istransitive return Bool, GAP.Globals.IsTransitive, true
+      elseif f == !istransitive return Bool, GAP.Globals.IsTransitive, false
+      elseif f == isprimitive return Bool, GAP.Globals.IsPrimitive, true
+      elseif f == !isprimitive return Bool, GAP.Globals.IsPrimitive, false
+      elseif (f == number_moved_points || f == degree)
+         return Union{Int, AbstractVector{Int}}, GAP.Globals.NrMovedPoints, nothing
+      elseif f == transitivity
+         return Union{Int, AbstractVector{Int}}, GAP.Globals.Transitivity, nothing
       end
-   elseif f == order return Union{Int, AbstractVector{Int}}, GAP.Globals.Size
-   else throw(ArgumentError("Function not supported"))
    end
+   throw(ArgumentError("Function not supported"))
 end
 
 # check whether the input of all_small_group is valid (see below)
-function CheckValidType(L; isapg=false)    # isapg = Is a Permutation Group
-   isargument = false
-   expected_type = Any
-   arguments_to_add = 0                          # times the argument of a Boolean function is not specified
+function translate_group_library_args(args::Tuple; permgroups::Bool=false)
+   gapargs = []
+   i = 1
+   while i <= length(args)
+      arg = args[i]
+      if arg isa Pair
+         # handle e.g. `isabelian => false`
+         func = arg[1]
+         data = arg[2]
+         i += 1
+         expected_type, gapfunc, _ = find_index_function(func, permgroups)
+         if data isa expected_type
+            push!(gapargs, gapfunc, GAP.Obj(data))
+         else
+            throw(ArgumentError("bad argument $(arg[2]) for function $(func)"))
+         end
+      elseif arg isa Function
+         # handle e.g. `isabelian` or `isabelian, false`
+         func = arg
+         expected_type, gapfunc, default = find_index_function(func, permgroups)
+         i += 1
+         if i <= length(args) && args[i] isa expected_type
+            push!(gapargs, gapfunc, GAP.Obj(args[i]))
+            i += 1
+         elseif default !== nothing
+            # no argument given: default to `true`
+            push!(gapargs, gapfunc, default)
+         else
+            if i <= length(args)
+               throw(ArgumentError("bad argument $(args[i]) for function $(func)"))
+            else
+               throw(ArgumentError("missing argument for function $(func)"))
+            end
+         end
+      else
+         throw(ArgumentError("expected a function or a pair, got $arg"))
+      end
+   end
    
-   for i in 1:length(L)
-      if isargument
-         if expected_type == Bool
-            if typeof(L[i]) <: Function
-               expected_type = find_index_function(L[i], isapg)[1]
-               arguments_to_add += 1
-            elseif typeof(L[i])==Bool
-               isargument = false
-            else
-               return false
-            end
-         else
-            if typeof(L[i]) <: expected_type
-               isargument = false
-            else
-               return false
-            end
-         end
-      else
-         if !(typeof(L[i]) <: Function)
-            return false
-         else
-            isargument = true
-            expected_type = find_index_function(L[i], isapg)[1]
-         end
-      end
-   end
-
-   if isargument
-      if expected_type == Bool
-         arguments_to_add += 1
-         return true, arguments_to_add
-      else
-         return false
-      end
-   else
-      return true, arguments_to_add
-   end
+   return gapargs
 end
 
