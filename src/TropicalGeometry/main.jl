@@ -1,4 +1,3 @@
-
 include("semiring.jl")
 include("valuation.jl")
 include("poly.jl")
@@ -62,3 +61,5 @@ include("variety.jl")
 include("hypersurface.jl")
 include("curve.jl")
 include("linear_space.jl")
+include("Tropical.jl")
+include("TropicalVarieties.jl")
