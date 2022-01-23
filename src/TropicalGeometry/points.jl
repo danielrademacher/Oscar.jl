@@ -49,29 +49,25 @@ export random_affine_linear_polynomials
 
 
 #=======
-tropical Groebner basis
-todo: proper documentation
-Example:
-
-val_2 = TropicalSemiringMap(QQ,2)
-Kx,(x,y,z) = PolynomialRing(QQ,3)
-I = ideal([x+2*y,y+2*z])
-tropical_points(I,val_2)
-
-Kt,t = RationalFunctionField(QQ,"t")
-val_t = TropicalSemiringMap(Kt,t)
-Ktx,(x,y,z) = PolynomialRing(Kt,3)
-I = ideal([x+t*y,y+t*z])
-tropical_points(I,val_t)
+# Kt,t = RationalFunctionField(QQ,"t")
+# val_t = ValuationMap(Kt,t)
+# Ktx,(x,y,z) = PolynomialRing(Kt,3)
+# I = ideal([x+t*y,y+t*z])
+# tropical_points(I,val_t)
 =======#
 function tropical_points(I,val::TropicalSemiringMap{K,p} where{K,p})
 
   Kx = base_ring(I)
-  I0 = I + ideal(Kx,random_linear_polynomials(codim(I),Kx,val))
+  K = base_ring(Kx)
+  I0 = I + ideal(Kx,random_affine_linear_polynomials(dim(I),Kx,val_p))
 
-  # todo: compute the tropical variety of I0
+  while (dim(I0)!=0)
+    I0 = I + ideal(Kx,random_affine_linear_polynomials(dim(I),Kx,val_p))
+  end
 
-  return zeros(Int,0,length(symbols(Kx)))
+  Qp = PadicField(val_p.uniformizer,9) #todo: increase precision if necessary
+  I0p = [change_base_ring(Qp,f) for f in groebner_basis(I0)]
 
+  return solve_macaulay(I0p,eigenvector_method = "tropical") #todo: pass groebner basis flag+ordering
 end
 export tropical_points
