@@ -113,7 +113,7 @@ julia> Ktxy, (x,y) = PolynomialRing(Kt,["x", "y"]);
 
 julia> f = t*x+t*y+1;
 
-julia> val_t = TropicalSemiringMap(Kt,t);
+julia> val_t = ValuationMap(Kt,t);
 
 julia> initial(f,val_t,w)       # polynomial over QQ
 1
@@ -200,6 +200,27 @@ basis computation. If `skip_legality_check=true`, skips check whether valuation
 and weight vector are legal, i.e., if `I` is non-homogeneous, then `val` may
 only be trivial and `w` may only have non-negative entries.
 
+julia> initial(Cyclic5Homogenized, val_3, w) # same as for val_2
+
+julia> initial(Katsura5Homogenized, val_2, w)
+
+julia> initial(Katsura5Homogenized, val_3, w) # different to val_2
+
+julia> Kt,t = RationalFunctionField(QQ,"t");
+
+julia> Ktx,(x0,x1,x2,x3,x4,x5) = PolynomialRing(Kt,6);
+
+julia> Cyclic5Homogenized_Kt = ideal([change_coefficient_ring(Kt,f) for f in gens(Cyclic5Homogenized)]);
+
+julia> Katsura5Homogenized_Kt = ideal([change_coefficient_ring(Kt,f) for f in gens(Katsura5Homogenized)]);
+
+julia> val_t = ValuationMap(Kt,t); # t-adic valuation
+
+julia> initial(Cyclic5Homogenized_Kt, val_t, w) # same leading monomials as for val_2 and val_3
+
+julia> initial(Katsura5Homogenized_Kt, val_t, w) # different leading monomials as for val_2
+                                                 # same leading monomials as for val_3
+```
 """
 function initial(I::MPolyIdeal, val::TropicalSemiringMap, w::Vector; skip_groebner_basis_computation::Bool=false)
   if !skip_groebner_basis_computation
