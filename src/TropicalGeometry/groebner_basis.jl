@@ -95,18 +95,21 @@ function groebner_basis(I::MPolyIdeal,val::TropicalSemiringMap,w::Vector{<: Unio
 
 
   ###
-  # Step 3: if complete_reduction = true and val is non-trivial, eliminate
-  # tail-monomials contained in the leading ideal in the tropical sense
-  #  In the simulation, these monomials corresponds to tail-monomials contained
-  #  in the leading ideal up to saturation by t and elimination means
-  #  eliminating them after multiplying by a sufficiently high power in t
+  # Step 3: if complete_reduction = true and val is non-trivial,
+  #   eliminate tail-monomials contained in the leading ideal in the tropical sense
+  #   Inside the tightened simulation, monomials to be eliminated are tail-monomials contained in the leading ideal up to saturation by t
+  #   and elimination means eliminating them after multiplying the GB element by a sufficiently high power in t
   ###
   if complete_reduction==true && is_valuation_nontrivial(val)
     sort!(vvGB,lt=_x_monomial_lt) # sort vvGB by their leading x monomial from small to large
     Singular.libSingular.set_option("OPT_INFREDTAIL", true)
     for i in 1:length(vvGB)-1
       for j in i+1:length(vvGB)
-        vvGB[j] = Singular.reduce(vvGB[j],Singular.std(Singular.Ideal(S,vvGB[i])))
+        t_ecart = x_monomial_ecart(vvGB[j],vvGB[i])
+        if t_ecart>=0
+          vvGB[j] = Singular.reduce(val.uniformizer_ring^t_ecart*vvGB[j],Singular.std(Singular.Ideal(S,vvGB[i])))
+          vvGB[j] = S(tighten_simulation(Rtx(vvGB[j]),val))
+        end
       end
     end
     Singular.libSingular.set_option("OPT_INFREDTAIL", false)
@@ -121,7 +124,6 @@ function groebner_basis(I::MPolyIdeal,val::TropicalSemiringMap,w::Vector{<: Unio
 
   return gens(GB)
 end
-
 
 
 #=======
