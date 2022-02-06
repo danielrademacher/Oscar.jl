@@ -90,6 +90,6 @@ function groebner_polyhedron(GB::Vector{<:MPolyElem}, inGB::Vector{<:MPolyElem},
     end
   end
 
-  return Polyhedron(A,b)
+  return Polyhedron((ineq_lhs,ineq_rhs),(eq_lhs,eq_rhs))
 end
 export groebner_polyhedron
