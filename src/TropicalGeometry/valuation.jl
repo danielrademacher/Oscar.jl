@@ -266,7 +266,11 @@ function simulate_valuation(G::Vector{<:MPolyElem}, val::TropicalSemiringMap)
     error("input vector of polynomials empty, thus ambient polynomial ring unknown")
   end
 
-  R = val.valued_ring
+  if coefficient_field
+    R = val.valued_field
+  else
+    R = val.valued_ring
+  end
   t = val.uniformizer_symbol
 
   Rtx,tx = PolynomialRing(R,vcat([t],symbols(parent(G[1]))))
@@ -352,6 +356,7 @@ function desimulate_valuation(vvg::MPolyElem, val::TropicalSemiringMap)
   K = val.valued_field
   Kx,_ = PolynomialRing(K,x)
 
+
   vvg = evaluate(vvg,[1],[val.uniformizer_ring])
   if iszero(vvg) # vvg may be p-t
     return Kx(0)
@@ -431,13 +436,14 @@ function tighten_simulation(f::MPolyElem,val::TropicalSemiringMap)
 
   # subsitute first variable by uniformizer_ring so that all monomials have distinct x-monomials
   # and compute the gcd of its coefficients
+  # note: if the coefficient ring is a field, gcd will always be 1
   f = evaluate(f,[1],[p]) # todo: sanity check that f is not 0
-  cGcd = val.valued_field(gcd([c for c in coefficients(f)]))
+  cGcd = val.valued_field(gcd(collect(coefficients(f))))
 
   # next divide f by the gcd of its coefficients
   # and replace uniformizer_ring by first variable
   K = val.valued_field
-  R = val.valued_ring
+  R = coefficient_ring(Rtx)
   p = val.uniformizer_field
   f_tightened = MPolyBuildCtx(Rtx)
   for (c,alpha) in zip(coefficients(f),exponent_vectors(f))

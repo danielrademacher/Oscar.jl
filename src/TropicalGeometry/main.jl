@@ -69,6 +69,10 @@ end
 gcd(F::Vector{fmpq_poly}) = reduce(gcd, F)
 gcd(F::fmpq_poly...) = reduce(gcd, F)
 
+function gcd(F::Vector{AbstractAlgebra.Generic.Rat{fmpq}})
+  return 1
+end
+
 ###
 # Allow Singular.satstd over coefficient rings
 ###
