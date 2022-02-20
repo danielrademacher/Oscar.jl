@@ -10,7 +10,6 @@
 
 
 #=======
-<<<<<<< HEAD
 returns true if f is homogeneous (w.r.t. total degree),
 returns false otherwise
 =======#
@@ -24,52 +23,6 @@ function _is_homogeneous(f::MPolyElem)
   end
   return true
 end
-=======
-tropical Groebner basis
-Example:
-val_2 = ValuationMap(QQ,2)
-Kx,(x,y,z) = PolynomialRing(QQ,3)
-w = [0,0,0]
-I = ideal([x+2*y,y+2*z])
-groebner_basis(I,val_2,w)
-
-Kt,t = RationalFunctionField(QQ,"t")
-val_t = ValuationMap(Kt,t)
-Ktx,(x,y,z) = PolynomialRing(Kt,3)
-w = [0,0,0]
-I = ideal([x+t*y,y+t*z])
-groebner_basis(I,val_t,w,return_initial=true)
-=======#
-@doc Markdown.doc"""
-    groebner_basis(I::Ideal, val::ValuationMap, w::Vector)
-
-Computes a Groebner basis of `I` over a field with valuation `val` with respect to weight vector `w`, that is a finite generating set of `I` whose initial forms generate the initial ideal with respect to `w`.
-
-For the definitions of initial form, initial ideal and Groebner basis see [Maclagan-Sturmfels, Section 2.4].
-
-# Warning
-`I` must be homogeneous if `val` is non-trivial or `w` contains non-positive entries. If `val` is trivla and `w` contains only non-negative entries, then what is computed is a regular Groebner basis with respect to a weighted ordering with weight vector `w`.
-
-# Examples
-```jldoctest
-julia> Kx,(x0,x1,x2,x3,x4,x5) = PolynomialRing(QQ,6);
-
-julia> Cyclic5Homogenized = ideal([x1+x2+x3+x4+x5,
-                                   x1*x2+x2*x3+x3*x4+x1*x5+x4*x5,
-                                   x1*x2*x3+x2*x3*x4+x1*x2*x5+x1*x4*x5+x3*x4*x5,
-                                   x1*x2*x3*x4+x1*x2*x3*x5+x1*x2*x4*x5+x1*x3*x4*x5+x2*x3*x4*x5,
-                                   -x0^5+x1*x2*x3*x4*x5]);
-
-julia> Katsura5Homogenized = ideal([-x0+x1+2*x2+2*x3+2*x4+2*x5,
-                                    -x0*x1+x1^2+2*x2^2+2*x3^2+2*x4^2+2*x5^2,
-                                    -x0*x2+2*x1*x2+2*x2*x3+2*x3*x4+2*x4*x5,
-                                    x2^2-x0*x3+2*x1*x3+2*x2*x4+2*x3*x5,
-                                    2*x2*x3-x0*x4+2*x1*x4+2*x2*x5]);
-
-julia> val_2 = ValuationMap(QQ,2); # 2-adic valuation
-
-julia> val_3 = ValuationMap(QQ,3); # 3-adic valuation
->>>>>>> TropicalGeometry: interreduce first part
 
 #=======
 returns true if I has homogeneous generators,
@@ -81,7 +34,6 @@ function _has_homogeneous_generators(I::MPolyIdeal{K} where {K})
   return all(_is_homogeneous, gens(I))
 end
 
-<<<<<<< HEAD
 
 
 @doc Markdown.doc"""
@@ -90,15 +42,6 @@ end
 Compute a Groebner basis of `I` over a field with valuation `val` with respect
 to weight vector `w`, that is a finite generating set of `I` whose initial forms
 generate the initial ideal with respect to `w`.
-=======
-julia> groebner_basis(Cyclic5Homogenized, val_2, w)
-
-julia> groebner_basis(Cyclic5Homogenized, val_3, w) # same as for val_2
-
-julia> groebner_basis(Katsura5Homogenized, val_2, w)
-
-julia> groebner_basis(Katsura5Homogenized, val_3, w) # different to val_2
->>>>>>> TropicalGeometry: interreduce first part
 
 For the definitions of initial form, initial ideal and Groebner basis see
 Section 2.4 of [MS15](@cite).
@@ -116,7 +59,6 @@ ideal(x^3 - 5*x^2*y, -2*x^2*y + 3*y^3)
 
 julia> val_2 = TropicalSemiringMap(QQ,2);
 
-<<<<<<< HEAD
 julia> w = [0,0];
 
 julia> groebner_basis(I,val_2,w)
@@ -131,38 +73,14 @@ julia> groebner_basis(I,val_2,w)
 function groebner_basis(I::MPolyIdeal,val::TropicalSemiringMap,w::Vector{<: Union{Int,Rational{Int}} }; complete_reduction::Bool=false, return_lead::Bool=false)
 
   @assert Oscar._has_homogeneous_generators(I)
-=======
-julia> groebner_basis(Cyclic5Homogenized_Kt, val_t, w) # same leading monomials as for val_2 and val_3
-
-julia> groebner_basis(Katsura5Homogenized_Kt, val_t, w) # different leading monomials as for val_2
-                                                        # same leading monomials as for val_3
-```
-"""
-function groebner_basis(I::MPolyIdeal,val::ValuationMap,w::Vector{<: Union{Int,Rational{Int},fmpz,fmpq} }; pertubation::Vector=[], skip_legality_check::Bool=false)
-
-  ###
-  # Step 0: check legality of input unless stated otherwise
-  #   If val is non-trivial or w is not non-negative, I must be homogeneous
-  #   This is because otherwise the localization with respect to the non-global ordering will change the ideal
-  ###
-  if !skip_legality_check
-    check_legality(I, val, w)
-  end
->>>>>>> TropicalGeometry: interreduce first part
 
   ###
   # Step 1: Compute a standard basis in the simulation ring
   ###
   vvI = simulate_valuation(I,val)
   Rtx = base_ring(vvI)
-<<<<<<< HEAD
-<<<<<<< HEAD
   # todo: replace with groebner_bases in OSCAR once more orderings are supported
   S,_ = Singular.PolynomialRing(singular_coeff_ring(base_ring(Rtx)), map(string, Nemo.symbols(Rtx)), ordering = Singular.ordering_a(w)*Singular.ordering_dp())
-=======
-  S,_ = Singular.PolynomialRing(singular_ring(base_ring(Rtx)), map(string, Nemo.symbols(Rtx)), ordering = Singular.ordering_a(w)*Singular.ordering_dp())
->>>>>>> TropicalGeometry: interreduce first part
-=======
   if isempty(pertubation)
     w = simulate_valuation(w,val)
     S,_ = Singular.PolynomialRing(singular_ring(base_ring(Rtx)), map(string, Nemo.symbols(Rtx)), ordering = Singular.ordering_a(w)*Singular.ordering_dp())
@@ -170,7 +88,6 @@ function groebner_basis(I::MPolyIdeal,val::ValuationMap,w::Vector{<: Union{Int,R
     w,u = simulate_valuation(w,pertubation,val)
     S,_ = Singular.PolynomialRing(singular_ring(base_ring(Rtx)), map(string, Nemo.symbols(Rtx)), ordering = Singular.ordering_a(w)*Singular.ordering_a(u)*Singular.ordering_dp())
   end
->>>>>>> TropicalGeometry: tropical_variety first complete version
   SI = Singular.Ideal(S, [S(g) for g in gens(vvI)])
   vvGB = Singular.gens(Singular.satstd(SI,Singular.MaximalIdeal(S,1)))
 
@@ -257,7 +174,7 @@ G = groebner_basis(Cyclic5Homogenized_Ks, val, w)
 # G = groebner_basis(Katsura5Homogenized_Ks, val, w)
 
 =======#
-function interreduce_tropically(G::Vector{<:MPolyElem}, val::ValuationMap, w::Vector; pertubation::Vector=[]) # todo: why does normal interreduce not work?
+function interreduce_tropically(G::Vector{<:MPolyElem}, val::ValuationMap, w::Vector; pertubation::Vector=[])
 
   # println("================================================== inside interreduce_tropically")
   # println(G)
@@ -265,12 +182,7 @@ function interreduce_tropically(G::Vector{<:MPolyElem}, val::ValuationMap, w::Ve
   # println(pertubation)
 
   ###
-<<<<<<< HEAD
-  # Step 2: tighten simulation so that no two monomials of the standard basis
-  # elements have the same x-monomial
-=======
   # Step 0: simulate valuation and change coefficient ring to valued field
->>>>>>> TropicalGeometry: interreduce first part
   ###
   vG = simulate_valuation(G,val,coefficient_field=true)
   Rtx = parent(vG[1])
@@ -308,7 +220,7 @@ function interreduce_tropically(G::Vector{<:MPolyElem}, val::ValuationMap, w::Ve
 
 
   ###
-  # Step 2: sort and interreduce_tropically each slice
+  # Step 2: sort and interreduce_tropically each degree slice
   ###
   Singular.libSingular.set_option("OPT_INFREDTAIL", true)
   for (d,H) in enumerate(sG_slices)
@@ -318,8 +230,14 @@ function interreduce_tropically(G::Vector{<:MPolyElem}, val::ValuationMap, w::Ve
       continue
     end
 
-    # sort H
-    sort!(H)
+    # println("================================================== H start of step 2")
+    # display(H)
+
+    # sort H by leading monomial from large to small
+    sort!(H,rev=true)
+
+    # println("================================================== H after sort")
+    # display(H)
 
     # first pass, remove leading x-monomial of H[i] from H[j] for i<j
     for i in 1:length(H)-1
@@ -328,6 +246,9 @@ function interreduce_tropically(G::Vector{<:MPolyElem}, val::ValuationMap, w::Ve
       end
     end
 
+    # println("================================================== H after 1st pass")
+    # display(H)
+
     # second pass, remove leading x-monomial of H[j] from H[i] for i<j
     for i in 1:length(H)-1
       for j in i+1:length(H)
@@ -335,45 +256,119 @@ function interreduce_tropically(G::Vector{<:MPolyElem}, val::ValuationMap, w::Ve
       end
     end
 
+    # println("================================================== H after 2nd pass")
+    # display(H)
+
     # overwrite old slice with the new reduced slice
     sG_slices[d] = H
   end
 
 
   ###
-  # Step 3: reduce each slice by its predecessors
+  # Step 3: reduce each degree slice by its lower-degree predecessors
   ###
-  for (d,H) in enumerate(sG_slices)
-    # save the length of H
-    # as H increases in size, the first k elements will always be its original elements
-    k = length(H)
+  # records whether we have encountered the lowest degree slice
+  # this is so we can skip the lowest degree slice without any reduction
+  sG_reduced = []
+  for H in sG_slices
 
-    for h in H
+    # if slice is empty, skip to next slice
+    if isempty(H)
+      continue
     end
-    # H
-    # for
-    # end
 
-    # overwrite old slice with the first k entries of H
-    sG_slices[d] = H[1:k]
+    # if no reducers exist, add current slice to reducers and skip to next slice
+    if isempty(sG_reduced)
+      append!(sG_reduced,H)
+      continue
+    end
+
+    # H will increase in size during the reduction process
+    # the following vector keeps track which of its entries are original elements
+    H_original_poly_indices = collect(1:length(H))
+    # records up to which term each original element of H has been reduced
+    # * 1 means only leading monomial is reduced which is always true
+    # * 0 means that all elements of H have been reduced
+    H_original_tail_indices = ones(Int,length(H))
+    zero_vector = zeros(Int,length(H))
+    while H_original_tail_indices>zero_vector
+      # Step 3.1: Find the maximal monomial to be reduced
+      monomials_to_be_reduced = [first(Iterators.drop(monomials(H[i]),j))
+                                 for (i,j) in zip(H_original_poly_indices,
+                                                  H_original_tail_indices) if j>0]
+      index_to_be_reduced = argmax(monomials_to_be_reduced)
+      monomial_to_be_reduced = monomials_to_be_reduced[index_to_be_reduced]
+
+      # Step 3.2: Find the reducer that is maximal once multiplied to the right x-degree
+      #   as the x-monomial will be the same as that of monomial_to_be_reduced,
+      #   this is equivalent to finding the reducer with maximal t-degree.
+      #   (the maximality is optional, but comes with several practical advantages)
+      new_reducer_t_degree = -1
+      new_reducer = 0
+      for g in sG_reduced
+        b,q = divides(monomial_to_be_reduced,leading_monomial(g))
+        if b && new_reducer_t_degree<Singular.leading_exponent_vector(g)[1]
+          new_reducer = q*g
+          new_reducer_t_degree = Singular.leading_exponent_vector(g)[1]
+        end
+      end
+
+      # if there is no reducer, increment H_original_tail_indices_to_be_reduced
+      #   and skip to next monomial_to_be_reduced
+      if iszero(new_reducer)
+        H_original_tail_indices[index_to_be_reduced] += 1
+        # set H_original_tail_indices to 0 if length exceeded
+        if length(H[H_original_poly_indices[index_to_be_reduced]])>=H_original_tail_indices[index_to_be_reduced]
+          H_original_tail_indices[index_to_be_reduced] = 0
+        end
+        continue
+      end
+
+      # Step 3.3: Add new_reducer to H and update H_original_element_indices
+      new_reducer_position = searchsortedfirst(H,new_reducer)
+      insert!(H,new_reducer_position,new_reducer)
+      for i in 1:length(H_original_poly_indices)
+        if H_original_poly_indices[i] >= new_reducer_position
+          H_original_poly_indices[i] += 1
+        end
+      end
+
+      # Step 3.4: Reduce new H
+      # first pass, remove leading x-monomial of H[i] from H[j] for i<j when new_reducer_position<=j
+      for i in 1:length(H)-1
+        for j in max(new_reducer_position,i+1):length(H)
+          H[j] = Singular.reduce(H[j],Singular.std(Singular.Ideal(S,H[i])))
+        end
+      end
+      # second pass, remove leading x-monomial of H[j] from H[i] for i<j when new_reducer_position<=j
+      for i in 1:length(H)-1
+        for j in max(new_reducer_position,i+1):length(H)
+          H[i] = Singular.reduce(H[i],Singular.std(Singular.Ideal(S,H[j])))
+        end
+      end
+
+      # Step 3.5: update H_original_tail_indices by replacing larger equal length entries with 0
+      for (i,j) in enumerate(H_original_poly_indices)
+        if H_original_tail_indices[i]>=length(H[j])
+          H_original_tail_indices[i] = 0
+        end
+      end
+    end
+
+    # append original elements to sG_reduced
+    append!(sG_reduced,H[H_original_poly_indices])
   end
-  # todo: Step 3
-
   Singular.libSingular.set_option("OPT_INFREDTAIL", false)
 
 
   ###
   # Step 4: return reduced GB
   ###
-  sG = append!(sG_slice0,collect(Iterators.flatten(sG_slices)))
-  vG = [Rtx(sg) for sg in sG] # problem: sg lives over Q(t), Rtx lives over Q[t]
+  vG = [Rtx(sg) for sg in sG_reduced]
   return desimulate_valuation(vG,val)
 
   ###
-  # Step 3: if complete_reduction = true and val is non-trivial,
-  #   eliminate tail-monomials contained in the leading ideal in the tropical sense
-  #   Inside the tightened simulation, monomials to be eliminated are tail-monomials contained in the leading ideal up to saturation by t
-  #   and elimination means eliminating them after multiplying the GB element by a sufficiently high power in t
+  # old code:
   ###
   if complete_reduction==true && is_valuation_nontrivial(val)
     sort!(vvGB,lt=_x_monomial_lt) # sort vvGB by their leading x monomial from small to large
@@ -393,7 +388,8 @@ function interreduce_tropically(G::Vector{<:MPolyElem}, val::ValuationMap, w::Ve
 end
 export interreduce_tropically
 
-<<<<<<< HEAD
+
+
 #=======
 returns true if the leading x-monomial of f is less than that of g,
 returns false otherwise
@@ -405,69 +401,3 @@ function _x_monomial_lt(f::Singular.spoly,g::Singular.spoly)
   popfirst!(expv_g)
   return expv_f<expv_g
 end
-=======
-###
-# returns true if (leading x-monomial of f) <_lex (leading x-monomial of g)
-# returns false otherwise
-###
-function x_degree(f::Singular.spoly)
-  exp_f = Singular.leading_exponent_vector(f)
-  return sum(exp_f)-exp_f[1]
-end
-export x_degree
-
-# ###
-# # returns true if (leading x-monomial of f) <_lex (leading x-monomial of g)
-# # returns false otherwise
-# ###
-# function x_monomial_lt(f::Singular.spoly, g::Singular.spoly)
-#   exp_x_f = copy(Singular.leading_exponent_vector(f))
-#   exp_x_g = copy(Singular.leading_exponent_vector(g))
-#   popfirst!(exp_x_f)
-#   popfirst!(exp_x_g)
-#   return exp_x_f<exp_x_g
-# end
-# export x_monomial_lt
-
-
-# ###
-# # returns true if x^expv_g divides x^expv_f
-# # returns false otherwise
-# ###
-# function x_monomial_divides(exp_x_g::Vector,exp_x_f::Vector)
-#   for (eg,ef) in zip(exp_x_g,exp_x_f)
-#     if eg>ef
-#       return false
-#     end
-#   end
-#   return true
-# end
-# export x_monomial_divides
-
-
-# ###
-# # if the leading x-monomial of g divides x-monomials in f
-# #   returns l=max(0, (t_g-exponent of g) - (t-exponents of f))
-# #   so that f*t^l can be reduced by g to eliminate all the x-monomials
-# # otherwise, returns -1
-# ###
-# function x_monomial_ecart(f::Singular.spoly, g::Singular.spoly)
-#   exp_x_g = copy(Singular.leading_exponent_vector(g))
-#   exp_t_g = popfirst!(exp_x_g)
-#   e = 0
-#   dividend_found = false
-#   for exp_f in exponent_vectors(f)
-#     exp_x_f = copy(exp_f)
-#     exp_t_f = popfirst!(exp_x_f)
-#     if x_monomial_divides(exp_x_g,exp_x_f)
-#       e = max(e,exp_t_g-exp_t_f)
-#       dividend_found = true
-#     end
-#   end
-#   if dividend_found
-#     return e
-#   end
-#   return -1
-# end
-# export x_monomial_ecart
->>>>>>> TropicalGeometry: interreduce first part
