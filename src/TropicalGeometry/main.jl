@@ -73,6 +73,10 @@ function gcd(F::Vector{AbstractAlgebra.Generic.Rat{fmpq}})
   return 1
 end
 
+function gcd(F::Vector{fmpq})
+  return 1
+end
+
 ###
 # Allow Singular.satstd over coefficient rings
 ###
