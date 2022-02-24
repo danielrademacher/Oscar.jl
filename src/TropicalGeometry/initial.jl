@@ -4,11 +4,7 @@
 ###
 
 @doc Markdown.doc"""
-<<<<<<< HEAD
     valued_weighted_degree(f::MPolyElem, val::TropicalSemiringMap, w::Vector; pertubation::Vector=[], return_vector::Bool=false)
-=======
-    valued_weighted_degree(f::MPolyElem, val::ValuationMap, w::Vector; pertubation::Vector=[], return_vector::Bool=false)
->>>>>>> TropicalGeometry: broken commit, checked in for debugging purposes
 
 Return the valued weighted degree of a polynomial `f` with respect to valuation
 `val` and weight vector `w`. In other words, returns the tropicalized
@@ -40,7 +36,6 @@ julia> valued_weighted_degree(f, val_trivial, w, return_vector=true)
 
 ```
 """
-<<<<<<< HEAD
 function valued_weighted_degree(f::MPolyElem, val::TropicalSemiringMap, w::Vector; pertubation::Vector=[], return_vector::Bool=false)
   # compute the weighted degrees shifted by the coefficient valuations
   vwds = [val(c)*TropicalSemiring(val)(dot(w,alpha)) for (c,alpha) in zip(coefficients(f),exponent_vectors(f))]
@@ -61,29 +56,6 @@ function valued_weighted_degree(f::MPolyElem, val::TropicalSemiringMap, w::Vecto
     # compute the mininum amongst all pertubations with maximal original degree
     vwdPerp = min([vwdsPerp[i] for i in 1:length(vwds) if vwds[i]==vwd]...)
 
-=======
-function valued_weighted_degree(f::MPolyElem, val::ValuationMap, w::Vector; pertubation::Vector=[], return_vector::Bool=false)
-  # compute the weighted degrees
-  vwds = [dot(w,alpha) for alpha in exponent_vectors(f)]
-  # substract the coefficient valuations
-  vwds -= [val(c) for c in coefficients(f)]
-
-  # compute the maximum degree
-  vwd = max(vwds...)
-
-  if isempty(pertubation)
-    # if no pertubation is specified, compute the maximum and return vector if required
-    if return_vector
-      return vwd,vwds
-    end
-    return vwd
-  else
-    # if pertubation is specified, then compute the pertubed degrees
-    vwdsPerp = [dot(pertubation,alpha) for alpha in exponent_vectors(f)]
-    # compute the maximum amongst all pertubations with maximal original degree
-    vwdPerp = max([vwdsPerp[i] for i in 1:length(vwds) if vwds[i]==vwd]...)
-
->>>>>>> TropicalGeometry: broken commit, checked in for debugging purposes
     if return_vector
       return vwd,vwdPerp,vwds,vwdsPerp
     end
@@ -105,11 +77,7 @@ export valued_weighted_degree
 
 
 @doc Markdown.doc"""
-<<<<<<< HEAD
     initial(f::MPolyElem, val::TropicalSemiringMap, w::Vector, convention::Union{typeof(min),typeof(max)}=min; pertubation::Vector=[])
-=======
-    initial(f::MPolyElem, val::ValuationMap, w::Vector; pertubation::Vector=[])
->>>>>>> TropicalGeometry: broken commit, checked in for debugging purposes
 
 Return the initial form of `f` with respect to valuation `val` and weight `w`.
 If convention==min (default), it is computed in the min convention. If
