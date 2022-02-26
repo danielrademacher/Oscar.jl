@@ -53,6 +53,17 @@ end
 export random_affine_linear_polynomials
 
 
+function random_valued_ring_elem(s)
+  random_coeffs_and_powers = zip([rand(-99:99) for i in 1:2],[rand(1:9) for i in 1:2])
+  (c,d),random_coeffs_and_powers = Iterators.peel(random_coeffs_and_powers)
+  a = c*s^d
+  for (c,d) in random_coeffs_and_powers
+    a += c*s^d
+  end
+  return a
+end
+
+
 #=======
 points on the tropical variety
 todo: proper documentation
@@ -64,22 +75,12 @@ val_p = ValuationMap(QQ,32003)
 I = ideal([x+p*y,y+p*z,x+y+z+1])
 tropical_points(I,val_p,local_precision=29)
 
-<<<<<<< HEAD
 latest version of pAdicSolver
 # Kt,t = RationalFunctionField(QQ,"t")
 # val_t = ValuationMap(Kt,t)
 # Ktx,(x,y,z) = PolynomialRing(Kt,3)
 # I = ideal([x+t*y,y+t*z])
 # tropical_points(I,val_t)
-=======
-Ks,s = RationalFunctionField(QQ,"s")
-val_s = ValuationMap(Ks,s)
-Ksx,(x,y,z) = PolynomialRing(Ks,3)
-I = ideal([x+s*y,y+s*z,x+y+z+1])
-tropical_points(I,val_s)
-<<<<<<< HEAD
->>>>>>> TropicalGeometry: added tropical_points for t-adic valuation via p-adic valuation for p>>0
-=======
 
 
 Fs,s = RationalFunctionField(GF(32003),"s")
@@ -87,7 +88,6 @@ val_s = ValuationMap(Fs,s)
 Fsx,(x,y,z) = PolynomialRing(Fs,3)
 I = ideal(Fsx,[x+s*y,y+s*z,x+y+z+1])
 tropical_points(I,val_s)
->>>>>>> TropicalGeometry: tropical_points overhaul
 =======#
 function tropical_points(I::MPolyIdeal,val::ValuationMap; convention=:max, local_precision::Int=32, primes=[32003,32009,32027,32029,32051,32057,32059,32063])
 
@@ -101,9 +101,15 @@ function tropical_points(I::MPolyIdeal,val::ValuationMap; convention=:max, local
     println(I)
     error("input ideal is has no solutions")
   end
-  while (d>0)
-    # todo: change random_affine_linear_polynomials to be of the form x_i-z_i for i in an independent set and z_i of valuation 0 random
-    I = I + ideal(random_affine_linear_polynomials(d,Kx,val))
+  while (d!=0)
+    p = val.uniformizer_field
+    singular_assure(I)
+    sI = Singular.std(I.gens.S)
+    sR = base_ring(sI)
+    sK = coefficient_ring(sR)
+    sp = sK(p)
+    sI = sI + Singular.Ideal(sR,[x-random_valued_ring_elem(sp) for x in first(Singular.independent_sets(sI))])
+    I = ideal(Kx,sI)
     d = dim(I)
   end
 
