@@ -118,7 +118,7 @@ fun(x::TropicalRing{typeof(max)}) = max
 
 # We use (x) for finite values and ±∞ for infinity.
 function AbstractAlgebra.expressify(x::TropicalRingElem{T}; context = nothing) where {T}
-  if isinf(x) 
+  if isinf(x)
     return T === typeof(min) ? "∞" : "-∞"
   end
   return Expr(:call, "", expressify(data(x), context = context))
