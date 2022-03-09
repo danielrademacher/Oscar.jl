@@ -146,7 +146,11 @@ julia> tropical_link(I,val_5,w5)
 ```
 """
 function tropical_link(I::MPolyIdeal, val::ValuationMap, w::Vector; local_precision::Integer=19)
-  return tropical_link(initial(I,val,w),local_precision=local_precision)
+  tl = tropical_link(initial(I,val,w),local_precision=local_precision)
+  if convention(val)==max
+    tl *= -1
+  end
+  return tl
 end
 
 
@@ -171,7 +175,8 @@ function tropical_link(inI::MPolyIdeal; local_precision::Integer=19)
   pivotIndices = pivots(Eqs)
   nonpivotIndices = setdiff(collect(1:ncols(Eqs)),pivotIndices)
   if (dim(inI)!=dim(H)+1)
-    error("Homogeneity space not one-codimensional.")
+    display(inI)
+    error("Homogeneity space of input ideal not one-codimensional:\n",inI)
   end
 
 

@@ -53,38 +53,38 @@ end
 # ---------------------
 ###
 
-@doc Markdown.doc"""
-    TropicalVariety()
+# @doc Markdown.doc"""
+#     TropicalVariety()
 
-Construct the embedded tropical variety of a polynomial ideal over a (possibly trivially) valued field
+# Construct the embedded tropical variety of a polynomial ideal over a (possibly trivially) valued field
 
-# Examples
-"""
-# todo: Dartmouth
-# function TropicalVariety()
-#
-#     return #...
-# end
+# # Examples
+# """
+# # todo: Dartmouth
+# # function TropicalVariety()
+# #
+# #     return #...
+# # end
 
 
 
-@doc Markdown.doc"""
-    TropicalVariety{M,EMB}(Sigma::PolyhedralComplex)
+# @doc Markdown.doc"""
+#     TropicalVariety{M,EMB}(Sigma::PolyhedralComplex)
 
-Construct the abstract tropical variety from a polyhedral complex
+# Construct the abstract tropical variety from a polyhedral complex
 
-# Examples
-```jldoctest
-julia> IM = IncidenceMatrix([[1,2],[1,3],[1,4]]);
+# # Examples
+# ```jldoctest
+# julia> IM = IncidenceMatrix([[1,2],[1,3],[1,4]]);
 
-julia> VR = [0 0; 1 0; 0 1; -1 -1];
+# julia> VR = [0 0; 1 0; 0 1; -1 -1];
 
-julia> far_vertices = [2,3,4];
+# julia> far_vertices = [2,3,4];
 
-julia> Sigma = PolyhedralComplex(IM, VR, far_vertices);
+# julia> Sigma = PolyhedralComplex(IM, VR, far_vertices);
 
-julia> tropicalLine = TropicalVariety{min,true}(Sigma)
-"""
+# julia> tropicalLine = TropicalVariety{min,true}(Sigma)
+# """
 
 
 ###
@@ -228,6 +228,11 @@ function tropical_variety(I::MPolyIdeal, val::ValuationMap, convention::Union{ty
     insert!(working_list_done, i, (w,C,G))
 
     points_to_traverse = facet_points(C)
+    # println("============================== inside tropical_variety")
+    # display(affine_hull(C))
+    # display(facets(C))
+    # println(dim(C)) # !!!!
+    # display(points_to_traverse)
     for point_to_traverse in points_to_traverse
       # if point was traversed before, skip
       i = searchsortedfirst(facet_points_done,point_to_traverse)
@@ -237,13 +242,16 @@ function tropical_variety(I::MPolyIdeal, val::ValuationMap, convention::Union{ty
       # otherwise add point_to_traverse to facet_points_done
       insert!(facet_points_done, i, point_to_traverse)
 
+      println("computing link for ",point_to_traverse)
       directions_to_traverse = tropical_link(ideal(G),val,point_to_traverse) # todo, this output can be wrong
+      check_tropical_link_output(G,val,point_to_traverse,directions_to_traverse)
       for direction_to_traverse in directions_to_traverse
         # compute neighbour
         print("computing groebner_basis for ",point_to_traverse,direction_to_traverse,"... ")
         G_neighbour = groebner_flip(G,val,w,point_to_traverse,direction_to_traverse)
         println("done")
         C_neighbour = groebner_polyhedron(G_neighbour,val,point_to_traverse,pertubation=direction_to_traverse)
+        @assert dim(C_neighbour) == dim(I)
         w_neighbour = anchor_point(C_neighbour)
 
         # if neighbour is already in done list, skip
@@ -324,10 +332,10 @@ function tropical_variety(I::MPolyIdeal, val::ValuationMap, convention::Union{ty
   (w,C,G) = first(working_list_done)
   lineality_space_gens = matrix(QQ,lineality_space(C))
 
-  TropI = TropicalVariety{typeof(max),true}(PolyhedralComplex(IncidenceMatrix(incidence_matrix),
-                                                              vertices_and_rays,
-                                                              far_vertices,
-                                                              lineality_space_gens))
+  TropI = TropicalVariety{convention,true}(PolyhedralComplex(IncidenceMatrix(incidence_matrix),
+                                                             vertices_and_rays,
+                                                             far_vertices,
+                                                             lineality_space_gens))
 
 
   # 3.2: Construct lists for weight_vectors, initial_ideals and multiplicities
@@ -353,7 +361,7 @@ facet_points(P)
 =======#
 function anchor_point(P::Polyhedron)
   # compute the sum of vertices and rays in homogenized coordinates
-  pt = convert(Vector{fmpq},sum([vertices(P)...,rays(P)...]))
+  pt = Vector{fmpq}(sum([vertices(P)...,rays(P)...]))
   pushfirst!(pt,nvertices(P))
 
   # project to orthogonal complement of lineality space if necessary
@@ -379,3 +387,29 @@ function facet_points(P::Polyhedron)
   return points
 end
 export facet_points
+
+
+###
+# infinity: debugging functions for the tropical traversal
+###
+
+function check_tropical_link_output(G::Vector,val::ValuationMap,point_to_traverse::Vector{fmpq},directions_to_traverse::Vector)
+  # Test 1: check whether initial forms of G are non-monomial
+  for direction_to_traverse in directions_to_traverse
+    for (i,initial_g) in enumerate(initial(G,val,point_to_traverse,pertubation=direction_to_traverse))
+      if length(initial_g)==1
+        println("Gr\"obner basis:")
+        display(G)
+        println("point_to_traverse:")
+        println(point_to_traverse)
+        println("directions_to_traverse:")
+        display(directions_to_traverse)
+        println("problematic direction: ", direction_to_traverse)
+        println("problematic Groebner basis element: ", G[i])
+        println("problematic initial form: ", initial_g)
+        error("tropical link returned invalid directions to traverse.")
+      end
+    end
+  end
+
+end

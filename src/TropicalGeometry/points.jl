@@ -89,7 +89,7 @@ Fsx,(x,y,z) = PolynomialRing(Fs,3)
 I = ideal(Fsx,[x+s*y,y+s*z,x+y+z+1])
 tropical_points(I,val_s)
 =======#
-function tropical_points(I::MPolyIdeal,val::ValuationMap; convention=:max, local_precision::Int=32, primes=[32003,32009,32027,32029,32051,32057,32059,32063])
+function tropical_points(I::MPolyIdeal,val::ValuationMap; local_precision::Int=32, primes=[32003,32009,32027,32029,32051,32057,32059,32063])
 
   ###
   # Step 0: Check whether I has solutions.
@@ -211,11 +211,10 @@ function tropical_points(I::MPolyIdeal,val::ValuationMap; convention=:max, local
   ###
   # Step 2: remove solutions outside the torus and return
   ###
-  T_finite = [];
-  if convention==:max
+  T_finite = []
+  minOrMax = 1
+  if convention(val)==max
     minOrMax = -1
-  else
-    minOrMax = 1
   end
   for w in eachrow(T)
     is_finite = true

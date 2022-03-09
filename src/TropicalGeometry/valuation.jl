@@ -297,9 +297,6 @@ function simulate_valuation(w::Vector, val::TropicalSemiringMap)
   # either way, scale vector to make entries integral
   commonDenom = lcm([denominator(wi) for wi in w])
   sw = [Int(numerator(commonDenom*wi)) for wi in w] # casting vector entries to Int32 for Singular
-  if convention(val)==min
-    sw *= -1
-  end
   return sw
 end
 
@@ -314,10 +311,6 @@ function simulate_valuation(w::Vector, u::Vector, val::TropicalSemiringMap)
   u_commonDenom = lcm([denominator(ui) for ui in u])
   sw = [Int(numerator(w_commonDenom*wi)) for wi in w]
   su = [Int(numerator(u_commonDenom*ui)) for ui in u]
-  if convention(val)==min
-    sw *= -1
-    su *= -1
-  end
   return sw,su
 end
 
@@ -378,6 +371,7 @@ function desimulate_valuation(w::Vector,val::TropicalSemiringMap)
     w /= w[1]
     popfirst!(w)
   end
+  # if the convention is min, convert internal max convention by multiplying with -1
   if convention(val)==min
     w *= -1
   end
@@ -392,6 +386,7 @@ function desimulate_valuation(w::Vector, u::Vector, val::TropicalSemiringMap)
     popfirst!(w)
     popfirst!(u)
   end
+  # if the convention is min, convert internal max convention by multiplying with -1
   if convention(val)==min
     w *= -1
     u *= -1

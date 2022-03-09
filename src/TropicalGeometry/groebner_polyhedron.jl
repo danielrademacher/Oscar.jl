@@ -45,6 +45,10 @@ function groebner_polyhedron(GB::Vector{<:MPolyElem}, val::ValuationMap, w::Vect
   if !skip_reduction
     GB = interreduce_tropically(GB,val,w,pertubation=pertubation)
   end
+  # println("============================== inside groebner_polyhedron")
+  # display(GB)
+  # display(w)
+  # display(initial(GB,val,w,pertubation=pertubation))
 
   return groebner_polyhedron(GB,initial(GB,val,w,pertubation=pertubation),val)
 end
@@ -73,7 +77,9 @@ function groebner_polyhedron(GB::Vector{<:MPolyElem}, inGB::Vector{<:MPolyElem},
       println(inGB)
       error("initial forms have monomials which original polynomials do not")
     end
-    inf_leadval = Int(val(coefficients_f[i]); preserve_ordering=true)
+    inf_leadval = Int(val(coefficients_f[i]))                    # +/- val depending on min/max-convention
+    # println("============================== inside groebner_polyhedron")
+    # println("coefficients_f[i]: ",coefficients_f[i]," Int(val(coefficients_f[i])): ",Int(val(coefficients_f[i])));
 
     for inf_tailexpv in inf_tailexpvs
       i = findfirst(isequal(inf_tailexpv),exponent_vectors_f)
@@ -82,22 +88,36 @@ function groebner_polyhedron(GB::Vector{<:MPolyElem}, inGB::Vector{<:MPolyElem},
         println(inGB)
         error("initial forms have monomials which original polynomials do not")
       end
-      inf_tailval = Int(val(coefficients_f[i]); preserve_ordering=true)
-      eq_lhs = vcat(eq_lhs,transpose(inf_tailexpv-inf_leadexpv)) # todo: is there a better way of doing this line?
-      push!(eq_rhs,inf_tailval-inf_leadval)
-    end
+      inf_tailval = Int(val(coefficients_f[i]))                  # +/- val depending on min/max-convention
+      # println("coefficients_f[i]: ",coefficients_f[i]," Int(val(coefficients_f[i])): ",Int(val(coefficients_f[i])));
+      eq_lhs = vcat(eq_lhs,transpose(inf_leadexpv-inf_tailexpv)) # LHS: leadexpv - tailexpv
+      push!(eq_rhs,inf_tailval-inf_leadval)                      # RHS: +/- tailval -/+ leadval
+    end                                                          # LHS=RHS <=> leadexpv +/- leadval = tailexpv +/- tailval
 
     ###
     # Step 2: construct weight inequalities enforcing that valued weighted
     # degree of inf is greater equal f
     ###
     for (f_coeff,f_expv) in zip(coefficients(f),exponent_vectors(f))
-      f_val = Int(val(f_coeff); preserve_ordering=true)
-      ineq_lhs = vcat(ineq_lhs,transpose(f_expv-inf_leadexpv)) # todo: is there a better way of doing this line?
-      push!(ineq_rhs,f_val-inf_leadval)
-    end
+      f_val = Int(val(f_coeff))                                # +/- val depending on min/max-convention
+      # println("f_coeff: ",f_coeff," Int(val(f_coeff)): ",Int(val(f_coeff)))
+      ineq_lhs = vcat(ineq_lhs,transpose(inf_leadexpv-f_expv)) # LHS: leadexpv - tailexpv
+      push!(ineq_rhs,f_val-inf_leadval)                        # RHS: +/- tailval -/+ leadval
+    end                                                        # LHS<RHS <=> leadexpv +/- leadval < tailexpv +/- tailval
   end
 
+  if convention(val)==max # min-convention: leadexpv +/- leadval < tailexpv +/- tailval (as above)
+    ineq_lhs *= -1        # max-convention: tailexpv +/- tailval > leadexpv +/- leadval (multiplied by -1)
+    ineq_rhs *= -1
+  end
+
+  # println("============================== inside groebner_polyhedron")
+  # display(GB)
+  # display(inGB)
+  # display(ineq_lhs)
+  # display(ineq_rhs)
+  # display(eq_lhs)
+  # display(eq_rhs)
   return Polyhedron((ineq_lhs,ineq_rhs),(eq_lhs,eq_rhs))
 end
 export groebner_polyhedron
