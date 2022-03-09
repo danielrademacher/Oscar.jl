@@ -116,6 +116,18 @@ julia> f = t*x+t*y+1;
 julia> val_t = ValuationMap(Kt,t);
 
 julia> initial(f,val_t,w)       # polynomial over QQ
+
+julia> initial(f,val_trivial,w) # polynomial in the original ring
+
+julia> Kt,t = RationalFunctionField(GF(32003),"t");
+
+julia> Ktxy, (x,y) = PolynomialRing(Kt,["x", "y"]);
+
+julia> f = t*x+t*y+1;
+
+julia> val_t = ValuationMap(Kt,t);
+
+julia> initial(f,val_t,w)       # polynomial over QQ
 1
 ```
 ```jldoctest

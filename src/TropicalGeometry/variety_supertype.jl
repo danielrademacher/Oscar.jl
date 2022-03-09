@@ -32,11 +32,19 @@ Intersect two tropical varieties.
 
 # Examples
 ```jldoctest
+<<<<<<< HEAD
 julia> RR = TropicalSemiring(min)
 Tropical semiring (min)
 
 julia> S,(x,y) = RR["x","y"]
 (Multivariate Polynomial Ring in x, y over Tropical semiring (min), AbstractAlgebra.Generic.MPoly{Oscar.TropicalSemiringElem{typeof(min)}}[x, y])
+=======
+julia> RR = tropical_semiring(min)
+Tropical ring (min)
+
+julia> S,(x,y) = RR["x","y"]
+(Multivariate Polynomial Ring in x, y over Tropical ring (min), AbstractAlgebra.Generic.MPoly{Oscar.TropicalSemiringElem{typeof(min)}}[x, y])
+>>>>>>> TropicalGeometry: renamed tropical_numbers to tropical_semiring
 
 julia> f1 = x+y+1
 x + y + (1)
@@ -385,6 +393,35 @@ function nvertices(T::TropicalVarietySupertype{M,EMB}) where {M,EMB}
     return nvertices(T.polyhedralComplex)
 end
 
+
+
+@doc Markdown.doc"""
+    polyhedra(T::TropicalVariety{M, EMB})
+    polyhedra(T::TropicalCurve{M, EMB})
+    polyhedra(T::TropicalHypersurface{M, EMB})
+    polyhedra(T::TropicalLinearSpace{M, EMB})
+
+Returns the polyhedra of `T`.
+
+# Examples
+A tropical hypersurface in RR^n is of lineality dimension n
+```jldoctest
+julia> RR = tropical_semiring(min);
+
+julia> S,(x,y) = RR["x","y"];
+
+julia> f = x+y+1;
+
+julia> tropicalLine = TropicalHypersurface(f);
+
+julia> polyhedra(tropicalLine)
+# todo: add examples for varieties, curves and linear spaces
+# todo: do vertices at infinity count?
+```
+"""
+function polyhedra(T::TropicalVarietySupertype{M,EMB}) where {M,EMB}
+    return polyhedra(T.polyhedralComplex)
+end
 
 
 
