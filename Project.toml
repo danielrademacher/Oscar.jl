@@ -19,6 +19,7 @@ Singular = "bcd08a7b-43d2-5ff7-b6d4-c458787f915c"
 Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
 cohomCalg_jll = "5558cf25-a90e-53b0-b813-cadaa3ae7ade"
 msolve_jll = "6d01cc9a-e8f6-580e-8c54-544227e08205"
+Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 
 [compat]
 AbstractAlgebra = "0.25.0"
